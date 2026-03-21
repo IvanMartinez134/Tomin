@@ -40,7 +40,7 @@ export const useYieldSimulator = (initialBalance, apy = APY_CONFIG.base, isActiv
 
         // Logging para debugging (puedes comentar en producción)
         if (Math.random() < 0.1) { // Log 10% de las veces para no saturar
-          console.log(`📈 Yield simulado: +$${increment.toFixed(4)} (Total: $${newBalance.toFixed(2)})`);
+          console.log(`Yield simulado: +$${increment.toFixed(4)} (Total: $${newBalance.toFixed(2)})`);
         }
 
         return newBalance;
@@ -61,11 +61,15 @@ export const useYieldSimulator = (initialBalance, apy = APY_CONFIG.base, isActiv
  * @returns {Array} Array de cajas con balances actualizados
  */
 export const useMultipleBoxesYield = (boxes, isActive = true) => {
-  const [updatedBoxes, setUpdatedBoxes] = useState(boxes);
+  const [updatedBoxes, setUpdatedBoxes] = useState([]);
+
+  // Sincronizar con las cajas cuando cambien
+  useEffect(() => {
+    setUpdatedBoxes(boxes || []);
+  }, [boxes]);
 
   useEffect(() => {
-    if (!isActive || !boxes || boxes.length === 0) {
-      setUpdatedBoxes(boxes);
+    if (!isActive || !updatedBoxes || updatedBoxes.length === 0) {
       return;
     }
 
@@ -75,6 +79,11 @@ export const useMultipleBoxesYield = (boxes, isActive = true) => {
     const interval = setInterval(() => {
       setUpdatedBoxes((prevBoxes) =>
         prevBoxes.map((box) => {
+          // Solo aplicar rendimiento si hay balance
+          if (!box.currentBalance || box.currentBalance <= 0) {
+            return box;
+          }
+
           const ratePerInterval = (box.apy / 100) / (secondsInYear / intervalSeconds);
           const effectiveRate = ratePerInterval * APY_CONFIG.demoMultiplier;
           const increment = box.currentBalance * effectiveRate;
@@ -88,7 +97,7 @@ export const useMultipleBoxesYield = (boxes, isActive = true) => {
     }, APY_CONFIG.updateIntervalMs);
 
     return () => clearInterval(interval);
-  }, [boxes, isActive]);
+  }, [updatedBoxes, isActive]);
 
   return updatedBoxes;
 };

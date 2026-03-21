@@ -18,7 +18,7 @@ export default function Navbar({ currentView, setCurrentView, userName = "Ángel
             <span className="text-2xl font-bold text-white">A</span>
           </div>
           <p className="text-center text-gray-900 font-semibold">¡hola, {userName}!</p>
-          <p className="text-center text-gray-500 text-xs uppercase tracking-wider mt-1">PREMIUM CURATOR</p>
+          <p className="text-center text-gray-500 text-xs uppercase tracking-wider mt-1">PREMIUM</p>
         </div>
 
         {/* Navigation */}

@@ -10,31 +10,52 @@ import { useMultipleBoxesYield } from '../hooks/useYieldSimulator';
 import SavingsBox from './SavingsBox';
 import CreateBoxModal from './CreateBoxModal';
 import DepositModal from './DepositModal';
+import EditBoxModal from './EditBoxModal';
+import DeleteBoxModal from './DeleteBoxModal';
 import { mockSavingsBoxes } from '../data/mockData';
 import { useEffect } from 'react';
 import axios from 'axios';
 
 const Dashboard = () => {
-  const { isConnected } = useWallet();
+  const {
+    isConnected,
+    isPerfectlyAuthenticated,
+    user,
+    userName,
+    address,
+    balance,
+    error
+  } = useWallet();
   const [boxes, setBoxes] = useState([]);
   
   // Fetch from backend whenever user changes/mounts
   useEffect(() => {
     const fetchBoxes = async () => {
+      if (!user?.id) {
+        console.log('⏳ Esperando autenticación de usuario...');
+        return;
+      }
+
       try {
-        const response = await axios.get('http://localhost:3001/api/boxes?userId=1');
+        console.log(`📦 Obteniendo cajas para usuario ${user.id} (${user.name})`);
+        const response = await axios.get(`http://localhost:3001/api/boxes?userId=${user.id}`);
         if(response.data.success) {
           setBoxes(response.data.data);
+          console.log(`✅ ${response.data.data.length} cajas cargadas`);
         }
       } catch (error) {
-        console.error("Error fetching boxes", error);
+        console.error("❌ Error fetching boxes", error);
       }
     };
     fetchBoxes();
-  }, []);
+  }, [user]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedBox, setSelectedBox] = useState(null);
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [boxToEdit, setBoxToEdit] = useState(null);
+  const [boxToDelete, setBoxToDelete] = useState(null);
 
   // Simular rendimiento en todas las cajas
   const boxesWithYield = useMultipleBoxesYield(boxes, isConnected);
@@ -49,7 +70,31 @@ const Dashboard = () => {
   }, [boxes]);
 
   // Handler para crear nueva caja
-  const handleCreateBox = async (newBox) => { try { const r = await axios.post('http://localhost:3001/api/boxes', { userId: 1, name: newBox.name, icon: newBox.icon || newBox.iconType, goal: newBox.goal }); if(r.data.success) { setBoxes([...boxes, r.data.data]); } } catch(e) {} setIsCreateModalOpen(false); };
+  const handleCreateBox = async (newBox) => {
+    if (!user?.id) {
+      alert('Error: Usuario no autenticado');
+      return;
+    }
+
+    try {
+      console.log('🏗️ Creando nueva caja para usuario:', user.id);
+      const response = await axios.post('http://localhost:3001/api/boxes', {
+        userId: user.id,
+        name: newBox.name,
+        icon: newBox.icon || newBox.iconType,
+        goal: newBox.goal
+      });
+
+      if(response.data.success) {
+        setBoxes([...boxes, response.data.data]);
+        console.log('✅ Caja creada:', response.data.data.name);
+      }
+    } catch(error) {
+      console.error('❌ Error creando caja:', error);
+      alert('Error creando caja');
+    }
+    setIsCreateModalOpen(false);
+  };
 
   // Handler para abrir modal de depósito
   const handleOpenDeposit = (box) => {
@@ -95,6 +140,37 @@ const Dashboard = () => {
     }
 };
 
+  // Handler para editar cajas
+  const handleEdit = (box) => {
+    setBoxToEdit(box);
+    setIsEditModalOpen(true);
+  };
+
+  // Handler para eliminar cajas
+  const handleDelete = (box) => {
+    setBoxToDelete(box);
+    setIsDeleteModalOpen(true);
+  };
+
+  // Handler para el éxito de la edición
+  const handleEditSuccess = (updatedBox) => {
+    setBoxes((prevBoxes) =>
+      prevBoxes.map((box) =>
+        box.id === updatedBox.id ? updatedBox : box
+      )
+    );
+    setIsEditModalOpen(false);
+    setBoxToEdit(null);
+  };
+
+  // Handler para el éxito de la eliminación
+  const handleDeleteSuccess = (deletedBoxId) => {
+    setBoxes((prevBoxes) => prevBoxes.filter((box) => box.id !== deletedBoxId));
+    setIsDeleteModalOpen(false);
+    setBoxToDelete(null);
+  };
+
+  // Mostrar loading o estado de conectividad
   if (!isConnected) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
@@ -124,8 +200,55 @@ const Dashboard = () => {
     );
   }
 
+  if (isConnected && !isPerfectlyAuthenticated) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] px-4">
+        <div className="w-16 h-16 border-4 border-cyan-400 border-t-transparent rounded-full animate-spin mb-6"></div>
+        <h2 className="text-2xl font-bold mb-3 text-center">
+          Configurando tu cuenta...
+        </h2>
+        <p className="text-gray-300 text-center max-w-md mb-4">
+          Estamos creando tu perfil de usuario con la información de tu wallet.
+        </p>
+        {address && (
+          <p className="text-sm text-gray-400 break-all text-center">
+            Wallet: {address.slice(0, 8)}...{address.slice(-8)}
+          </p>
+        )}
+        {error && (
+          <div className="mt-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
+            <p className="text-red-300 text-sm text-center">{error}</p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="w-full max-w-7xl mx-auto px-4 py-8">
+      {/* Bienvenida de usuario */}
+      <div className="mb-6 p-4 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 rounded-lg">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-cyan-500 rounded-full flex items-center justify-center">
+            <span className="text-white font-bold text-lg">
+              {userName.charAt(0).toUpperCase()}
+            </span>
+          </div>
+          <div>
+            <h1 className="text-lg font-bold text-white">¡Hola, {userName}! 👋</h1>
+            <p className="text-sm text-gray-300">
+              Wallet conectado: {address?.slice(0, 8)}...{address?.slice(-8)} | Plan: {user.plan}
+            </p>
+          </div>
+          <div className="ml-auto">
+            <div className="flex items-center gap-2 text-sm text-green-200">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span>Conectado a Stellar</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
         {/* Balance Total */}
@@ -134,7 +257,7 @@ const Dashboard = () => {
             <div>
               <p className="text-gray-300 text-sm mb-1">Balance Total</p>
               <p className="text-3xl font-bold text-white">
-                ${totalBalance.toFixed(2)}
+                MXN$ {totalBalance.toFixed(2)}
               </p>
             </div>
             <PiggyBank size={40} className="text-cyan-400" />
@@ -147,7 +270,7 @@ const Dashboard = () => {
             <div>
               <p className="text-gray-300 text-sm mb-1">Metas Totales</p>
               <p className="text-3xl font-bold text-white">
-                ${totalGoals.toLocaleString()}
+                MXN$ {totalGoals.toLocaleString()}
               </p>
             </div>
             <TrendingUp size={40} className="text-purple-400" />
@@ -207,6 +330,8 @@ const Dashboard = () => {
               box={box}
               onDeposit={handleOpenDeposit}
               onWithdraw={handleWithdraw}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
             />
           ))}
         </div>
@@ -243,6 +368,28 @@ const Dashboard = () => {
           onSuccess={handleDepositSuccess}
         />
       )}
+
+      {/* Edit Box Modal */}
+      <EditBoxModal
+        box={boxToEdit}
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setBoxToEdit(null);
+        }}
+        onSuccess={handleEditSuccess}
+      />
+
+      {/* Delete Box Modal */}
+      <DeleteBoxModal
+        box={boxToDelete}
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setBoxToDelete(null);
+        }}
+        onSuccess={handleDeleteSuccess}
+      />
     </div>
   );
 };

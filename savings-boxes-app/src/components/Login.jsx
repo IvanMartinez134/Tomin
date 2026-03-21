@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
-import { Mail, Lock, Eye, EyeOff, Globe, DollarSign, ArrowRight, Shield, Award } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, Globe, DollarSign, ArrowRight, Shield, Award, Wallet } from 'lucide-react'
+import { ConnectButton } from 'accesly'
+import { useWallet } from '../context/WalletContext'
 
 export default function Login({ onLogin, onSwitchToRegister }) {
   const [email, setEmail] = useState('')
@@ -8,29 +10,34 @@ export default function Login({ onLogin, onSwitchToRegister }) {
   const [rememberMe, setRememberMe] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
+  // Obtener funciones del wallet
+  const {
+    isPerfectlyAuthenticated,
+    user,
+    loginWithCredentials,
+    isLoading: walletLoading,
+    error: walletError
+  } = useWallet()
+
+  // Efecto para redirigir cuando el usuario está autenticado con Accesly
+  React.useEffect(() => {
+    if (isPerfectlyAuthenticated && user) {
+      console.log('🔐 Usuario autenticado con Accesly, redirigiendo...');
+      onLogin(user);
+    }
+  }, [isPerfectlyAuthenticated, user, onLogin]);
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!email || !password) return
-    
+
     setIsLoading(true)
     try {
-      const response = await fetch('http://localhost:3001/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await response.json();
-      
-      if (data.success) {
-        onLogin(data.user);
-      } else {
-        alert(data.message || 'Error al iniciar sesión');
-      }
+      // Usar la función del WalletContext para login tradicional
+      const userData = await loginWithCredentials(email, password);
+      onLogin(userData);
     } catch (error) {
-      console.error(error);
-      alert('Error de conexión con el servidor');
+      alert(error.message || 'Error al iniciar sesión');
     } finally {
       setIsLoading(false);
     }
@@ -174,6 +181,41 @@ export default function Login({ onLogin, onSwitchToRegister }) {
           <div className="flex items-center gap-4 my-8">
             <div className="flex-1 h-px bg-gray-200" />
             <span className="text-sm text-gray-500">O continúa con</span>
+            <div className="flex-1 h-px bg-gray-200" />
+          </div>
+
+          {/* Accesly Wallet Connection */}
+          <div className="mb-6">
+            <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 border-2 border-purple-200 rounded-xl">
+              <div className="flex items-center gap-3 mb-3">
+                <Wallet className="w-6 h-6 text-purple-600" />
+                <div>
+                  <h3 className="font-semibold text-gray-800">Conectar con Accesly Wallet</h3>
+                  <p className="text-sm text-gray-600">Acceso rápido y seguro con tu wallet de Stellar</p>
+                </div>
+              </div>
+
+              <ConnectButton />
+
+              {walletLoading && (
+                <div className="flex items-center gap-2 mt-3 text-sm text-purple-600">
+                  <div className="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+                  <span>Conectando y autenticando...</span>
+                </div>
+              )}
+
+              {walletError && (
+                <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded text-sm text-red-600">
+                  {walletError}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="flex items-center gap-4 my-6">
+            <div className="flex-1 h-px bg-gray-200" />
+            <span className="text-sm text-gray-400">O usa otros métodos</span>
             <div className="flex-1 h-px bg-gray-200" />
           </div>
 

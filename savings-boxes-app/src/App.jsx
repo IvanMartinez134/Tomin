@@ -1,10 +1,10 @@
-﻿import React, { useState } from 'react'
+﻿import React, { useState, useEffect } from 'react'
 import { AcceslyProvider } from 'accesly'
 import { WalletProvider, useWallet } from './context/WalletContext'
 import Navbar from './components/Navbar'
 import SubscriptionPlans from './components/SubscriptionPlans'
 import SupportCenter from './components/SupportCenter'
-import Dashboard from './components/Dashboard'
+import SavingsDashboard from './components/SavingsDashboard'
 import Login from './components/Login'
 import Register from './components/Register'
 
@@ -25,22 +25,38 @@ export default function AppWrapper() {
 function App() {
   const [currentView, setCurrentView] = useState('login')
   const [currentPlan, setCurrentPlan] = useState('premium')
-  const [user, setUser] = useState(null)
 
-  const userName = user?.name || "Ángeles"
+  // Obtener estado del wallet
+  const { isPerfectlyAuthenticated, user, userName } = useWallet()
+
+  // Efecto para manejar auto-login cuando el usuario está autenticado con Accesly
+  useEffect(() => {
+    if (isPerfectlyAuthenticated && user) {
+      if (currentView === 'login' || currentView === 'register') {
+        console.log('🔐 Auto-redirigiendo a dashboard por autenticación Accesly');
+        setCurrentView('dashboard');
+      }
+    } else {
+      // Si no está autenticado y no está en login/register, redirigir a login
+      if (currentView !== 'login' && currentView !== 'register') {
+        console.log('🔒 Redirigiendo a login - usuario no autenticado');
+        setCurrentView('login');
+      }
+    }
+  }, [isPerfectlyAuthenticated, user, currentView])
 
   const handleLogin = (userData) => {
-    setUser(userData)
+    console.log('✅ Login exitoso:', userData.name);
     setCurrentView('dashboard')
   }
 
   const handleRegister = (userData) => {
-    setUser(userData)
+    console.log('✅ Registro exitoso:', userData.name);
     setCurrentView('dashboard')
   }
 
   const handleLogout = () => {
-    setUser(null)
+    console.log('👋 Cerrando sesión...');
     setCurrentView('login')
   }
 
@@ -78,8 +94,7 @@ function App() {
 
       <main className="flex-1 lg:ml-0 pt-24 lg:pt-0 pb-12">
         {currentView === 'dashboard' && (
-          <Dashboard 
-            userName={userName} 
+          <SavingsDashboard
             onUpgradePlan={() => setCurrentView('subscription')}
           />
         )}
