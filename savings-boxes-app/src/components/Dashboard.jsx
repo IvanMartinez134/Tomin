@@ -11,10 +11,27 @@ import SavingsBox from './SavingsBox';
 import CreateBoxModal from './CreateBoxModal';
 import DepositModal from './DepositModal';
 import { mockSavingsBoxes } from '../data/mockData';
+import { useEffect } from 'react';
+import axios from 'axios';
 
 const Dashboard = () => {
   const { isConnected } = useWallet();
-  const [boxes, setBoxes] = useState(mockSavingsBoxes);
+  const [boxes, setBoxes] = useState([]);
+  
+  // Fetch from backend whenever user changes/mounts
+  useEffect(() => {
+    const fetchBoxes = async () => {
+      try {
+        const response = await axios.get('http://localhost:3001/api/boxes?userId=1');
+        if(response.data.success) {
+          setBoxes(response.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching boxes", error);
+      }
+    };
+    fetchBoxes();
+  }, []);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedBox, setSelectedBox] = useState(null);
   const [isDepositModalOpen, setIsDepositModalOpen] = useState(false);
@@ -32,10 +49,7 @@ const Dashboard = () => {
   }, [boxes]);
 
   // Handler para crear nueva caja
-  const handleCreateBox = (newBox) => {
-    setBoxes([...boxes, newBox]);
-    console.log('✅ Nueva caja creada:', newBox);
-  };
+  const handleCreateBox = async (newBox) => { try { const r = await axios.post('http://localhost:3001/api/boxes', { userId: 1, name: newBox.name, icon: newBox.icon || newBox.iconType, goal: newBox.goal }); if(r.data.success) { setBoxes([...boxes, r.data.data]); } } catch(e) {} setIsCreateModalOpen(false); };
 
   // Handler para abrir modal de depósito
   const handleOpenDeposit = (box) => {
@@ -44,23 +58,42 @@ const Dashboard = () => {
   };
 
   // Handler para completar depósito
-  const handleDepositSuccess = (depositInfo) => {
-    // Actualizar balance de la caja
-    setBoxes((prevBoxes) =>
-      prevBoxes.map((box) =>
-        box.id === depositInfo.boxId
-          ? { ...box, currentBalance: box.currentBalance + depositInfo.amount }
-          : box
-      )
-    );
-    console.log('✅ Depósito completado:', depositInfo);
+  const handleDepositSuccess = async (depositInfo) => {
+    try {
+      const response = await axios.post(`http://localhost:3001/api/boxes/${depositInfo.boxId}/deposit`, {
+        amount: depositInfo.amount
+      });
+      if(response.data.success) {
+        setBoxes((prevBoxes) =>
+          prevBoxes.map((box) =>
+            box.id === depositInfo.boxId
+              ? { ...box, currentBalance: response.data.data.currentBalance }
+              : box
+          )
+        );
+        console.log('✅ Depósito completado en backend:', response.data.data);
+      }
+    } catch(e) {
+       console.error(e);
+       alert('Error deposit');
+    }
   };
 
   // Handler para retirar (placeholder)
-  const handleWithdraw = (box) => {
-    console.log('Retirar de:', box.name);
-    alert('Funcionalidad de retiro próximamente');
-  };
+  const handleWithdraw = async (box) => {
+    const amt = prompt("Monto a retirar:");
+    if(!amt || isNaN(amt)) return;
+    try {
+        const r = await axios.post(`http://localhost:3001/api/boxes/${box.id}/withdraw`, { amount: Number(amt) });
+        if(r.data.success) {
+            setBoxes(boxes.map(b => b.id === box.id ? { ...b, current_balance: r.data.data.current_balance } : b));
+            alert("Retiro exitoso");
+        }
+    } catch(e) {
+        console.error(e);
+        alert("Error al retirar");
+    }
+};
 
   if (!isConnected) {
     return (

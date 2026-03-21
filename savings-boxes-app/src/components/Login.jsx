@@ -13,10 +13,27 @@ export default function Login({ onLogin, onSwitchToRegister }) {
     if (!email || !password) return
     
     setIsLoading(true)
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    setIsLoading(false)
-    onLogin({ email, name: 'Ángeles' })
+    try {
+      const response = await fetch('http://localhost:3001/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        onLogin(data.user);
+      } else {
+        alert(data.message || 'Error al iniciar sesión');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Error de conexión con el servidor');
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (

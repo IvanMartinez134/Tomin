@@ -25,12 +25,31 @@ export default function Register({ onRegister, onSwitchToLogin }) {
       alert('Las contraseñas no coinciden')
       return
     }
-    
+
     setIsLoading(true)
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    setIsLoading(false)
-    onRegister({ email: formData.email, name: formData.name })
+    try {
+      const response = await fetch('http://localhost:3001/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          name: formData.name, 
+          email: formData.email, 
+          password: formData.password 
+        }),
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        onRegister(data.user);
+      } else {
+        alert(data.message || 'Error al registrarse');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Error de conexión con el servidor');
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
