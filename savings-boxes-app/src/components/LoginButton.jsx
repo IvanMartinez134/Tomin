@@ -20,18 +20,18 @@ const LoginButton = () => {
     return (
       <div className="flex items-center gap-3">
         {/* Mostrar dirección */}
-        <div className="hidden sm:flex items-center gap-2 bg-white/10 backdrop-blur-lg px-4 py-2 rounded-xl border border-white/20">
-          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-          <span className="text-sm font-mono">{formatAddress(address)}</span>
+        <div className="hidden sm:flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-xl border border-gray-200">
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          <span className="text-sm font-mono text-gray-700">{formatAddress(address)}</span>
         </div>
 
         {/* Botón de desconectar */}
         <button
           onClick={disconnect}
-          className="flex items-center gap-2 bg-red-500/20 hover:bg-red-500/30 text-red-200 font-semibold px-4 py-2 sm:px-6 sm:py-3 rounded-xl border border-red-500/30 transition-all duration-200"
+          className="flex items-center gap-2 bg-red-50 hover:bg-red-100 text-red-900 font-semibold px-4 py-2 sm:px-4 sm:py-2 rounded-xl border border-red-200 transition-all duration-200"
         >
-          <LogOut size={20} />
-          <span className="hidden sm:inline">Desconectar</span>
+          <LogOut size={16} />
+          <span className="hidden sm:inline text-sm">Salir</span>
         </button>
       </div>
     );

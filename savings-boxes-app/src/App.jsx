@@ -1,95 +1,100 @@
-/**
- * App.jsx
- * Componente principal de la aplicación Savings Boxes
- */
+﻿import React, { useState } from 'react'
+import { AcceslyProvider } from 'accesly'
+import { WalletProvider, useWallet } from './context/WalletContext'
+import Navbar from './components/Navbar'
+import SubscriptionPlans from './components/SubscriptionPlans'
+import SupportCenter from './components/SupportCenter'
+import Dashboard from './components/Dashboard'
+import Login from './components/Login'
+import Register from './components/Register'
 
-import { AcceslyProvider } from 'accesly';
-import { WalletProvider } from './context/WalletContext';
-import LoginButton from './components/LoginButton';
-import Dashboard from './components/Dashboard';
-import { Sparkles } from 'lucide-react';
-
-function App() {
+export default function AppWrapper() {
   return (
     <AcceslyProvider
       appId={import.meta.env.VITE_ACCESLY_APP_ID}
       network="testnet"
-      theme="dark"
+      theme="light"
     >
       <WalletProvider>
-        <div className="min-h-screen">
-        {/* Header */}
-        <header className="border-b border-white/10 backdrop-blur-lg bg-white/5 sticky top-0 z-40">
-          <div className="max-w-7xl mx-auto px-4 py-4">
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-              {/* Logo y título */}
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <Sparkles size={32} className="text-cyan-400" />
-                  <div>
-                    <h1 className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-                      Savings Boxes
-                    </h1>
-                    <p className="text-xs text-gray-400">
-                      Powered by DeFindex & Blend Capital
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Botón de login */}
-              <LoginButton />
-            </div>
-          </div>
-        </header>
-
-        {/* Main Content */}
-        <main className="pb-12">
-          <Dashboard />
-        </main>
-
-        {/* Footer */}
-        <footer className="border-t border-white/10 backdrop-blur-lg bg-white/5 mt-12">
-          <div className="max-w-7xl mx-auto px-4 py-6">
-            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-gray-400">
-              <div className="flex items-center gap-4">
-                <span>© 2026 Savings Boxes</span>
-                <span className="hidden sm:inline">|</span>
-                <span>Hackathon MVP</span>
-              </div>
-              <div className="flex items-center gap-4">
-                <a
-                  href="https://defindex.io"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-cyan-400 transition-colors"
-                >
-                  DeFindex ↗
-                </a>
-                <a
-                  href="https://blend.capital"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-cyan-400 transition-colors"
-                >
-                  Blend Capital ↗
-                </a>
-                <a
-                  href="https://stellar.org"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-cyan-400 transition-colors"
-                >
-                  Stellar ↗
-                </a>
-              </div>
-            </div>
-          </div>
-        </footer>
-      </div>
-    </WalletProvider>
+        <App />
+      </WalletProvider>
     </AcceslyProvider>
-  );
+  )
 }
 
-export default App;
+function App() {
+  const [currentView, setCurrentView] = useState('login')
+  const [currentPlan, setCurrentPlan] = useState('premium')
+  const [user, setUser] = useState(null)
+
+  const userName = user?.name || "Ángeles"
+
+  const handleLogin = (userData) => {
+    setUser(userData)
+    setCurrentView('dashboard')
+  }
+
+  const handleRegister = (userData) => {
+    setUser(userData)
+    setCurrentView('dashboard')
+  }
+
+  const handleLogout = () => {
+    setUser(null)
+    setCurrentView('login')
+  }
+
+  const handleSelectPlan = (planId) => {
+    setCurrentPlan(planId)
+    alert('Plan seleccionado correctamente')
+  }
+
+  if (currentView === 'login') {
+    return (
+      <Login 
+        onLogin={handleLogin} 
+        onSwitchToRegister={() => setCurrentView('register')} 
+      />
+    )
+  }
+
+  if (currentView === 'register') {
+    return (
+      <Register 
+        onRegister={handleRegister} 
+        onSwitchToLogin={() => setCurrentView('login')} 
+      />
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 flex">
+      <Navbar 
+        currentView={currentView} 
+        setCurrentView={setCurrentView} 
+        userName={userName}
+        onLogout={handleLogout}
+      />
+
+      <main className="flex-1 lg:ml-0 pt-24 lg:pt-0 pb-12">
+        {currentView === 'dashboard' && (
+          <Dashboard 
+            userName={userName} 
+            onUpgradePlan={() => setCurrentView('subscription')}
+          />
+        )}
+
+        {currentView === 'subscription' && (
+          <SubscriptionPlans 
+            currentPlan={currentPlan} 
+            onSelectPlan={handleSelectPlan} 
+          />
+        )}
+
+        {currentView === 'support' && (
+          <SupportCenter />
+        )}
+      </main>
+    </div>
+  )
+}
