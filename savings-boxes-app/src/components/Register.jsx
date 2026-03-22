@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Mail, Lock, Eye, EyeOff, Globe, DollarSign, ArrowRight, Shield, Award, User, Phone } from 'lucide-react'
+import logoImage from '../assets/logo.png'
 
 export default function Register({ onRegister, onSwitchToLogin }) {
   const [formData, setFormData] = useState({
@@ -57,13 +58,12 @@ export default function Register({ onRegister, onSwitchToLogin }) {
       {/* Left Column - Branding */}
       <div className="hidden lg:flex lg:w-1/2 bg-red-900 flex-col items-center justify-center relative px-8">
         {/* Logo */}
-        <div className="w-40 h-40 bg-red-800 rounded-full flex flex-col items-center justify-center mx-auto mb-6 shadow-2xl border-4 border-red-700">
-          <span className="text-white text-2xl font-bold tracking-wider mb-2">TOMIN</span>
-          <div className="relative">
-            <Globe className="w-14 h-14 text-white" strokeWidth={1.5} />
-            <DollarSign className="w-5 h-5 text-amber-400 absolute -top-1 -left-4 animate-pulse" />
-            <DollarSign className="w-5 h-5 text-amber-400 absolute -top-1 -right-4 animate-pulse" />
-          </div>
+        <div className="w-60 h-60 mx-auto mb-6">
+          <img
+            src={logoImage}
+            alt="Tomin Logo"
+            className="w-full h-full object-contain"
+          />
         </div>
         <p className="text-white text-center text-lg font-light mb-16">
           Tu salud financiera siempre protegida
@@ -87,13 +87,12 @@ export default function Register({ onRegister, onSwitchToLogin }) {
         <div className="w-full max-w-md">
           {/* Mobile Logo */}
           <div className="lg:hidden flex flex-col items-center mb-8">
-            <div className="w-24 h-24 bg-red-900 rounded-full flex flex-col items-center justify-center mb-4">
-              <span className="text-white text-lg font-bold tracking-wider mb-1">TOMIN</span>
-              <div className="relative">
-                <Globe className="w-8 h-8 text-white" strokeWidth={1.5} />
-                <DollarSign className="w-3 h-3 text-amber-400 absolute -top-0.5 -left-2" />
-                <DollarSign className="w-3 h-3 text-amber-400 absolute -top-0.5 -right-2" />
-              </div>
+            <div className="w-32 h-32 mb-4">
+              <img
+                src={logoImage}
+                alt="Tomin Logo"
+                className="w-full h-full object-contain"
+              />
             </div>
           </div>
 

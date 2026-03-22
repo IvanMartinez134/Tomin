@@ -286,16 +286,8 @@ export default function SavingsDashboard({ onUpgradePlan }) {
               ¡Hola, {userName}!
             </h1>
             <p className="text-gray-600 mb-2">
-              Dashboard de tus cajas de ahorro inteligentes con rendimiento en Stellar
+              Administra tus cajas de ahorro y alcanza tus metas financieras
             </p>
-            <div className="flex items-center gap-4 text-sm text-gray-500">
-              <span>Wallet: {address?.slice(0, 8)}...{address?.slice(-8)}</span>
-              <span>Plan: {user?.plan}</span>
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span>Conectado a Stellar</span>
-              </div>
-            </div>
           </div>
           <button
             onClick={() => setShowNewBoxModal(true)}
@@ -377,7 +369,7 @@ export default function SavingsDashboard({ onUpgradePlan }) {
 
         {/* Optimize Section */}
         {boxes.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-lg p-6 relative overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-lg p-6">
             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
               <div className="flex items-start gap-4">
                 <div className="w-14 h-14 bg-red-100 rounded-2xl flex items-center justify-center flex-shrink-0">
@@ -406,12 +398,6 @@ export default function SavingsDashboard({ onUpgradePlan }) {
                 </button>
               </div>
             </div>
-
-            {/* Floating badge */}
-            <div className="absolute top-4 right-4 bg-green-50 border border-green-200 px-4 py-2 rounded-full flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-green-600" />
-              <span className="text-green-700 font-semibold text-sm">RENDIMIENTO ESTIMADO +8.5% Anual</span>
-            </div>
           </div>
         )}
 
@@ -421,7 +407,7 @@ export default function SavingsDashboard({ onUpgradePlan }) {
             <div className="flex items-center gap-3">
               <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
               <p className="text-sm text-green-700">
-                <strong>Rendimiento activo</strong> - Tus cajas están generando intereses en tiempo real a través de DeFindex y Blend Capital
+                <strong>Rendimiento activo</strong> - Tus cajas están generando intereses adicionales automáticamente
               </p>
             </div>
           </div>

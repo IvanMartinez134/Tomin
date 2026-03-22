@@ -27,7 +27,7 @@ function App() {
   const [currentPlan, setCurrentPlan] = useState('premium')
 
   // Obtener estado del wallet
-  const { isPerfectlyAuthenticated, user, userName } = useWallet()
+  const { isPerfectlyAuthenticated, user, userName, logout } = useWallet()
 
   // Efecto para manejar auto-login cuando el usuario está autenticado con Accesly
   useEffect(() => {
@@ -55,9 +55,15 @@ function App() {
     setCurrentView('dashboard')
   }
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     console.log('👋 Cerrando sesión...');
-    setCurrentView('login')
+    try {
+      await logout(); // Cerrar sesión en Accesly y limpiar estado
+      setCurrentView('login'); // Redirigir al login
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+      setCurrentView('login'); // Redirigir aunque haya error
+    }
   }
 
   const handleSelectPlan = (planId) => {
